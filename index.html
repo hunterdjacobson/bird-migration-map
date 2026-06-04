@@ -26,13 +26,22 @@
 </head>
 <body class="bg-gray-100 font-sans">
     <nav class="bg-blue-600 p-4 text-white shadow-lg">
-        <div class="container mx-auto flex justify-between items-center">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <h1 class="text-2xl font-bold">Bird Migration Live Map</h1>
-            <div class="flex items-center space-x-4">
-                <label for="species-select" class="font-medium">Select Species:</label>
-                <select id="species-select" class="bg-white text-gray-800 px-3 py-1 rounded shadow focus:outline-none">
-                    <!-- Options populated dynamically -->
-                </select>
+            <div class="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                <!-- Search Bar -->
+                <div class="relative w-full md:w-64">
+                    <input type="text" id="bird-search" placeholder="Search any bird species..." 
+                           class="w-full bg-blue-700 text-white placeholder-blue-300 px-4 py-1.5 rounded-full border border-blue-500 focus:outline-none focus:ring-2 focus:ring-white text-sm">
+                    <div id="search-results" class="absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 hidden z-[2000] max-h-60 overflow-y-auto"></div>
+                </div>
+
+                <div class="flex items-center space-x-2 whitespace-nowrap">
+                    <label for="species-select" class="font-medium text-sm">Active Species:</label>
+                    <select id="species-select" class="bg-white text-gray-800 px-3 py-1 rounded shadow focus:outline-none text-sm min-w-[180px]">
+                        <!-- Options populated dynamically -->
+                    </select>
+                </div>
             </div>
         </div>
     </nav>

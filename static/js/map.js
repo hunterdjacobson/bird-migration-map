@@ -192,6 +192,7 @@ async function populateSpecies(regionCode = 'US') {
         } else {
             const firstSpecies = Object.keys(speciesMap)[0];
             if (firstSpecies) {
+                select.value = firstSpecies;
                 fetchSightings(firstSpecies);
                 updateSpeciesInfo(firstSpecies);
             } else {
@@ -205,6 +206,83 @@ async function populateSpecies(regionCode = 'US') {
         status.innerText = "Failed to load species list.";
     }
 }
+
+// Search Logic
+const birdSearch = document.getElementById('bird-search');
+const searchResults = document.getElementById('search-results');
+let searchTimeout;
+
+birdSearch.addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+    clearTimeout(searchTimeout);
+
+    if (query.length < 2) {
+        searchResults.classList.add('hidden');
+        return;
+    }
+
+    searchTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch(`/api/species/search?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            if (data.length > 0) {
+                searchResults.innerHTML = '';
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-800 text-sm border-b border-gray-100 last:border-0';
+                    div.textContent = item.name;
+                    div.addEventListener('click', () => {
+                        selectSearchedBird(item.code, item.name);
+                    });
+                    searchResults.appendChild(div);
+                });
+                searchResults.classList.remove('hidden');
+            } else {
+                searchResults.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+        }
+    }, 300);
+});
+
+// Function to handle bird selection from search
+function selectSearchedBird(code, name) {
+    const select = document.getElementById('species-select');
+    
+    // Check if bird is already in dropdown
+    let exists = false;
+    for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === code) {
+            exists = true;
+            select.selectedIndex = i;
+            break;
+        }
+    }
+
+    // If not in dropdown, add it temporarily
+    if (!exists) {
+        const option = document.createElement('option');
+        option.value = code;
+        option.textContent = name;
+        select.prepend(option);
+        select.value = code;
+    }
+
+    // Clear search and trigger updates
+    birdSearch.value = '';
+    searchResults.classList.add('hidden');
+    fetchSightings(code);
+    updateSpeciesInfo(code);
+}
+
+// Close search results when clicking outside
+document.addEventListener('click', (e) => {
+    if (!birdSearch.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.classList.add('hidden');
+    }
+});
 
 // Fetch sightings from API proxy
 async function fetchSightings(speciesCode) {

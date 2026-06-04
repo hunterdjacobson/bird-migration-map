@@ -158,6 +158,29 @@ def get_notable():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/species/search')
+def search_species():
+    """Search the taxonomy for species matching a query."""
+    query = request.args.get('q', '').lower()
+    if not query:
+        return jsonify([])
+    
+    taxonomy = get_taxonomy()
+    results = []
+    
+    for code, info in taxonomy.items():
+        if info['category'] == 'species':
+            name = info['name'].lower()
+            if query in name:
+                results.append({
+                    "code": code,
+                    "name": info['name']
+                })
+        if len(results) >= 10: # Limit results for performance
+            break
+            
+    return jsonify(results)
+
 @app.route('/api/species/<code>/info')
 def get_species_info(code):
     taxonomy = get_taxonomy()
