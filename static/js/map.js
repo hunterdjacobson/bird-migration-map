@@ -8,24 +8,41 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 let markersLayer = L.layerGroup().addTo(map);
 
-// Atlantic Flyway Coordinates
-const flywayCoords = [
-    [25.7617, -80.1918], // Miami
-    [32.0809, -81.0912], // Savannah
-    [35.2552, -75.5267], // Cape Hatteras
-    [38.9351, -74.9060], // Cape May
-    [41.0632, -71.9542], // Montauk
-    [43.6615, -70.2553], // Portland, ME
-    [44.6488, -63.5752]  // Halifax
-];
+// Migration Flyways Configuration
+const FLYWAYS = {
+    atlantic: { 
+        name: "Atlantic", 
+        color: "#ef4444", 
+        coords: [[25.76, -80.19], [35.25, -75.53], [38.93, -74.91], [41.06, -71.95], [43.66, -70.25], [44.65, -63.58]] 
+    },
+    mississippi: { 
+        name: "Mississippi", 
+        color: "#10b981", 
+        coords: [[29.95, -90.07], [35.15, -90.05], [38.63, -90.20], [41.88, -87.63], [44.98, -93.27], [49.90, -97.14]] 
+    },
+    central: { 
+        name: "Central", 
+        color: "#f59e0b", 
+        coords: [[27.80, -97.40], [35.47, -97.52], [37.69, -97.34], [41.12, -100.76], [46.81, -100.78], [50.45, -104.62]] 
+    },
+    pacific: { 
+        name: "Pacific", 
+        color: "#8b5cf6", 
+        coords: [[32.72, -117.16], [37.77, -122.42], [45.52, -122.68], [47.61, -122.33], [49.25, -123.12], [64.84, -147.72]] 
+    }
+};
 
-// Draw the flyway polyline
-const flywayLine = L.polyline(flywayCoords, {
-    color: '#ef4444',
-    weight: 3,
-    opacity: 0.6,
-    dashArray: '10, 10'
-}).addTo(map);
+const flywayLayers = {};
+
+// Draw all polylines
+Object.entries(FLYWAYS).forEach(([key, flyway]) => {
+    flywayLayers[key] = L.polyline(flyway.coords, {
+        color: flyway.color,
+        weight: 3,
+        opacity: 0.6,
+        dashArray: '10, 10'
+    }).addTo(map);
+});
 
 // Animated pulse marker for flyway
 const pulseIcon = L.divIcon({
@@ -35,7 +52,7 @@ const pulseIcon = L.divIcon({
     iconAnchor: [6, 6]
 });
 
-const animatedMarker = L.marker(flywayCoords[0], { icon: pulseIcon }).addTo(map);
+const animatedMarker = L.marker(FLYWAYS.atlantic.coords[0], { icon: pulseIcon }).addTo(map);
 
 // Animation logic
 let step = 0;
@@ -45,12 +62,13 @@ function animateFlyway() {
     step = (step + 1) % totalSteps;
     const progress = step / totalSteps;
     
-    const segmentCount = flywayCoords.length - 1;
+    const coords = FLYWAYS.atlantic.coords;
+    const segmentCount = coords.length - 1;
     const currentSegment = Math.floor(progress * segmentCount);
     const segmentProgress = (progress * segmentCount) % 1;
     
-    const start = flywayCoords[currentSegment];
-    const end = flywayCoords[currentSegment + 1];
+    const start = coords[currentSegment];
+    const end = coords[currentSegment + 1];
     
     if (start && end) {
         const lat = start[0] + (end[0] - start[0]) * segmentProgress;
@@ -62,6 +80,83 @@ function animateFlyway() {
 }
 
 animateFlyway();
+
+// Toggle Flyway function
+function toggleFlyway(key) {
+    const layer = flywayLayers[key];
+    const button = document.getElementById(`toggle-${key}`);
+    
+    if (map.hasLayer(layer)) {
+        map.removeLayer(layer);
+        button.classList.add('opacity-50');
+        button.classList.remove('ring-2', 'ring-offset-2', 'ring-gray-400');
+    } else {
+        map.addLayer(layer);
+        button.classList.remove('opacity-50');
+        button.classList.add('ring-2', 'ring-offset-2', 'ring-gray-400');
+    }
+}
+
+// Add event listeners for toggles
+Object.keys(FLYWAYS).forEach(key => {
+    const btn = document.getElementById(`toggle-${key}`);
+    if (btn) {
+        btn.addEventListener('click', () => toggleFlyway(key));
+    }
+});
+
+// Fetch species info (Wikipedia summary)
+async function updateSpeciesInfo(code) {
+    const placeholder = document.getElementById('species-placeholder');
+    const skeleton = document.getElementById('species-skeleton');
+    const dataPanel = document.getElementById('species-data');
+    const nameEl = document.getElementById('species-name');
+    const descEl = document.getElementById('species-desc');
+    const imgEl = document.getElementById('species-img');
+
+    // Show skeleton state
+    placeholder.classList.add('hidden');
+    dataPanel.classList.add('hidden');
+    skeleton.classList.remove('hidden');
+
+    try {
+        const response = await fetch(`/api/species/${code}/info`);
+        const info = await response.json();
+
+        nameEl.textContent = info.comName;
+        
+        if (info.extract) {
+            descEl.textContent = info.extract;
+            if (info.wikiUrl) {
+                const readMore = document.createElement('a');
+                readMore.href = info.wikiUrl;
+                readMore.target = '_blank';
+                readMore.className = 'text-blue-500 hover:underline ml-1 text-xs font-medium';
+                readMore.textContent = '(read more)';
+                descEl.appendChild(readMore);
+            }
+        } else {
+            descEl.innerHTML = '<span class="italic text-gray-400">No detailed information available from Wikipedia.</span>';
+        }
+
+        if (info.thumbnail) {
+            imgEl.src = info.thumbnail;
+            imgEl.classList.remove('hidden');
+        } else {
+            imgEl.classList.add('hidden');
+        }
+
+        skeleton.classList.add('hidden');
+        dataPanel.classList.remove('hidden');
+    } catch (error) {
+        console.error('Error fetching species info:', error);
+        nameEl.textContent = "Error";
+        descEl.textContent = "Failed to load species information.";
+        imgEl.classList.add('hidden');
+        skeleton.classList.add('hidden');
+        dataPanel.classList.remove('hidden');
+    }
+}
 
 // Populate Species Dropdown
 async function populateSpecies() {
@@ -81,7 +176,10 @@ async function populateSpecies() {
         
         // Initial fetch for the first species in the new list
         const firstSpecies = Object.keys(speciesMap)[0];
-        if (firstSpecies) fetchSightings(firstSpecies);
+        if (firstSpecies) {
+            fetchSightings(firstSpecies);
+            updateSpeciesInfo(firstSpecies);
+        }
 
     } catch (error) {
         console.error('Error loading species list:', error);
@@ -142,6 +240,7 @@ async function fetchSightings(speciesCode) {
 // Event listener for species selection
 document.getElementById('species-select').addEventListener('change', (e) => {
     fetchSightings(e.target.value);
+    updateSpeciesInfo(e.target.value);
 });
 
 // Initialize the dropdown on load

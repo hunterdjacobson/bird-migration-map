@@ -96,7 +96,7 @@ def get_species_info(code):
         'User-Agent': 'BirdMigrationMap/1.0 (hunterdjacobson@gmail.com)'
     }
 
-    result = {"comName": com_name, "extract": None, "thumbnail": None}
+    result = {"comName": com_name, "extract": None, "thumbnail": None, "wikiUrl": None}
 
     try:
         response = requests.get(url, headers=wiki_headers, timeout=5)
@@ -106,6 +106,7 @@ def get_species_info(code):
                 extract = data.get('extract', '')
                 result['extract'] = (extract[:277] + '...') if len(extract) > 280 else extract
                 result['thumbnail'] = data.get('thumbnail', {}).get('source')
+                result['wikiUrl'] = data.get('content_urls', {}).get('desktop', {}).get('page')
     except Exception as e:
         print(f"Wikipedia error for {wiki_name}: {type(e).__name__}: {e}")
 
