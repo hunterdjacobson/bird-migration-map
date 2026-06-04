@@ -90,7 +90,13 @@ async function populateSpecies() {
 
 // Fetch sightings from API proxy
 async function fetchSightings(speciesCode) {
+    const select = document.getElementById('species-select');
+    const status = document.getElementById('fetch-status');
+    
     markersLayer.clearLayers();
+    select.disabled = true;
+    status.innerText = "Loading sightings...";
+    status.classList.remove('text-red-500');
     
     try {
         const response = await fetch(`/api/sightings?speciesCode=${speciesCode}`);
@@ -122,8 +128,14 @@ async function fetchSightings(speciesCode) {
                 markersLayer.addLayer(marker);
             }
         });
+        
+        status.innerText = "";
     } catch (error) {
         console.error('Error fetching sightings:', error);
+        status.innerText = "Failed to load sightings. Check console.";
+        status.classList.add('text-red-500');
+    } finally {
+        select.disabled = false;
     }
 }
 

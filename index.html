@@ -40,7 +40,10 @@
     <main class="container mx-auto mt-8 p-4 bg-white rounded-lg shadow-xl">
         <div id="map" class="rounded-lg"></div>
         <div class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700">
-            <p class="font-bold">Legend</p>
+            <div class="flex justify-between items-start">
+                <p class="font-bold">Legend</p>
+                <div id="fetch-status" class="text-sm font-medium"></div>
+            </div>
             <ul class="list-disc ml-5">
                 <li><span class="inline-block w-3 h-3 bg-blue-500 rounded-full"></span> Recent Sightings (US, Last 14 days)</li>
                 <li><span class="inline-block w-3 h-3 bg-red-500 rounded-full"></span> Atlantic Flyway (Animated)</li>
