@@ -6,6 +6,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
+// Visualization Layers
 let markersLayer = L.layerGroup().addTo(map);
 
 // Migration Flyways Configuration
@@ -197,6 +198,7 @@ async function fetchSightings(speciesCode) {
     const back = daysSlider.value;
     
     markersLayer.clearLayers();
+    
     select.disabled = true;
     status.innerText = "Loading sightings...";
     status.classList.remove('text-red-500');
@@ -207,10 +209,16 @@ async function fetchSightings(speciesCode) {
         
         const data = await response.json();
         
+        // Find max count for proportional radius
+        const maxCount = Math.max(...data.map(s => s.howMany || 1), 1);
+
         data.forEach(sighting => {
             if (sighting.lat && sighting.lng) {
+                // Proportional Radius: 5px to 23px
+                const radius = 5 + (((sighting.howMany || 1) / maxCount) * 18);
+
                 const marker = L.circleMarker([sighting.lat, sighting.lng], {
-                    radius: 6,
+                    radius: radius,
                     fillColor: "#3b82f6",
                     color: "#ffffff",
                     weight: 1,
