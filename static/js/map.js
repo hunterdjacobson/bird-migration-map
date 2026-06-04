@@ -160,11 +160,20 @@ async function updateSpeciesInfo(code) {
 }
 
 // Populate Species Dropdown
-async function populateSpecies() {
+async function populateSpecies(regionCode = 'US') {
     const select = document.getElementById('species-select');
+    const daysSlider = document.getElementById('days-slider');
+    const status = document.getElementById('fetch-status');
+    
+    const back = daysSlider.value;
+    status.innerText = "Loading regional species...";
+    
     try {
-        const response = await fetch('/api/species');
+        const response = await fetch(`/api/species?region=${regionCode}&back=${back}`);
         const speciesMap = await response.json();
+        
+        // Store current selection if any
+        const currentSelection = select.value;
         
         // Clear existing and add from JSON
         select.innerHTML = '';
@@ -175,15 +184,25 @@ async function populateSpecies() {
             select.appendChild(option);
         });
         
-        // Initial fetch for the first species in the new list
-        const firstSpecies = Object.keys(speciesMap)[0];
-        if (firstSpecies) {
-            fetchSightings(firstSpecies);
-            updateSpeciesInfo(firstSpecies);
+        // Try to restore selection, or pick first
+        if (currentSelection && speciesMap[currentSelection]) {
+            select.value = currentSelection;
+            fetchSightings(currentSelection);
+            updateSpeciesInfo(currentSelection);
+        } else {
+            const firstSpecies = Object.keys(speciesMap)[0];
+            if (firstSpecies) {
+                fetchSightings(firstSpecies);
+                updateSpeciesInfo(firstSpecies);
+            } else {
+                status.innerText = "No species data for this region in the selected timeframe.";
+                markersLayer.clearLayers();
+            }
         }
 
     } catch (error) {
         console.error('Error loading species list:', error);
+        status.innerText = "Failed to load species list.";
     }
 }
 
@@ -197,6 +216,7 @@ async function fetchSightings(speciesCode) {
     const region = regionSelect.value;
     const back = daysSlider.value;
     
+    // Clear old markers immediately so they don't linger during the fetch
     markersLayer.clearLayers();
     
     select.disabled = true;
@@ -209,6 +229,11 @@ async function fetchSightings(speciesCode) {
         
         const data = await response.json();
         
+        if (data.length === 0) {
+            status.innerText = "No recent local sightings mapped for this species in the selected timeframe.";
+            return;
+        }
+
         // Find max count for proportional radius
         const maxCount = Math.max(...data.map(s => s.howMany || 1), 1);
 
@@ -262,7 +287,8 @@ daysSlider.addEventListener('input', (e) => {
     
     clearTimeout(sliderTimeout);
     sliderTimeout = setTimeout(() => {
-        fetchSightings(document.getElementById('species-select').value);
+        // Refresh the whole species list to match the new timeframe
+        populateSpecies(document.getElementById('region-select').value);
     }, 400);
 });
 
@@ -327,7 +353,8 @@ regionSelect.addEventListener('change', (e) => {
     if (view) {
         map.flyTo(view.center, view.zoom);
     }
-    fetchSightings(document.getElementById('species-select').value);
+    // Update species list for the new region
+    populateSpecies(code);
 });
 
 // Event listener for species selection
