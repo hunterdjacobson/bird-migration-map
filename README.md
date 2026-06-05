@@ -52,7 +52,7 @@ To set up the project locally, follow these steps:
 
 1.  **Clone the Repository:**
     ```bash
-    git clone https://github.com/your-username/bird-migration-map.git
+    git clone https://github.com/hunterdjacobson/bird-migration-map.git
     cd bird-migration-map
     ```
 
