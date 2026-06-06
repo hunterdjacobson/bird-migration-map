@@ -11,6 +11,7 @@
 *   **Taxonomic Autocomplete Search Engine:** Asynchronous backend wildcard querying via the `/api/species/search` endpoint that enables users to instantly query and map any bird in the global eBird taxonomy, bypassing local dropdown restrictions and injecting custom selections into the dropdown control.
 *   **Interactive Geospatial UI:** Custom Leaflet.js canvas mapping observations dynamically with proportional circle markers that scale by flock volume and provide detailed sighting metadata on click.
 *   **Dynamic Regional Filtering:** Responsive context switching that completely self-populates dropdown options based on the active wildlife records of any selected US State, providing localized ecological context.
+*   **Species Statistics Dashboard:** A mathematical metrics grid integrated into the species info panel that provides real-time data analysis for the selected species, including total observed individuals, unique location density, maximum recorded flock size, and the latest chronological sighting date.
 *   **Ornithological Context:** Asynchronous integration with the Wikipedia REST API to provide instant scientific extracts and species images in a reactive side panel upon selection.
 
 ## Architecture & Data Flow
