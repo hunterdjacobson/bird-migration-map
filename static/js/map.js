@@ -306,19 +306,37 @@ async function fetchSightings(speciesCode) {
         if (!response.ok) throw new Error('Failed to fetch data');
         
         const data = await response.json();
+        const statsWrapper = document.getElementById('species-stats');
         
         if (data.length === 0) {
             status.innerText = "No recent local sightings mapped for this species in the selected timeframe.";
+            if (statsWrapper) statsWrapper.classList.add('hidden');
             return;
         }
 
+        // MATH ANALYSIS LOOP: Calculate Metrics
+        const totalCount = data.reduce((sum, s) => sum + (s.howMany || 0), 0);
+        const locations = data.length;
+        const maxFlock = Math.max(...data.map(s => s.howMany || 0));
+        const latestTime = data.reduce((latest, s) => {
+            return (!latest || s.obsDt > latest) ? s.obsDt : latest;
+        }, "");
+
+        // Update DOM elements
+        document.getElementById('stat-total-count').textContent = totalCount.toLocaleString();
+        document.getElementById('stat-locations').textContent = locations.toLocaleString();
+        document.getElementById('stat-max-flock').textContent = maxFlock > 0 ? maxFlock.toLocaleString() : '1+';
+        document.getElementById('stat-latest-time').textContent = latestTime.split(' ')[0] || '--';
+        
+        if (statsWrapper) statsWrapper.classList.remove('hidden');
+
         // Find max count for proportional radius
-        const maxCount = Math.max(...data.map(s => s.howMany || 1), 1);
+        const maxCountValue = Math.max(...data.map(s => s.howMany || 1), 1);
 
         data.forEach(sighting => {
             if (sighting.lat && sighting.lng) {
                 // Proportional Radius: 5px to 23px
-                const radius = 5 + (((sighting.howMany || 1) / maxCount) * 18);
+                const radius = 5 + (((sighting.howMany || 1) / maxCountValue) * 18);
 
                 const marker = L.circleMarker([sighting.lat, sighting.lng], {
                     radius: radius,
