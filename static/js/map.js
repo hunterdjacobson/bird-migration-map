@@ -461,3 +461,8 @@ document.getElementById('species-select').addEventListener('change', (e) => {
 
 // Initialize the dropdown on load
 populateSpecies();
+
+// Force Leaflet to recalculate dimensions for full-viewport flex distribution
+setTimeout(() => {
+    map.invalidateSize();
+}, 200);

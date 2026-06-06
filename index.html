@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
-        #map { height: 600px; }
+        #map { height: 100%; }
         .pulse {
             width: 12px;
             height: 12px;
@@ -22,175 +22,225 @@
             70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        
+        input[type=range]::-webkit-slider-runnable-track { background: #1e3a8a; height: 6px; border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { margin-top: -5px; }
+
+        /* Leaflet Controls Customization */
+        .leaflet-control-zoom { border: none !important; border-radius: 12px !important; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; }
+        .leaflet-control-zoom-in, .leaflet-control-zoom-out { background: white !important; color: #1e3a8a !important; font-weight: bold !important; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
-    <nav class="bg-blue-600 p-4 text-white shadow-lg">
-        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <h1 class="text-2xl font-bold">Bird Migration Live Map</h1>
-            <div class="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-                <!-- Search Bar -->
-                <div class="relative w-full md:w-64">
-                    <input type="text" id="bird-search" placeholder="Search any bird species..." 
-                           class="w-full bg-blue-700 text-white placeholder-blue-300 px-4 py-1.5 rounded-full border border-blue-500 focus:outline-none focus:ring-2 focus:ring-white text-sm">
-                    <div id="search-results" class="absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 hidden z-[2000] max-h-60 overflow-y-auto"></div>
-                </div>
+<body class="h-screen w-screen flex flex-col overflow-hidden bg-gray-100 font-sans">
+    <!-- Partition A: Unified Topbar -->
+    <header class="h-16 bg-blue-900 text-white shadow-lg z-[2000] px-6 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-8 flex-1">
+            <h1 class="text-xl font-black tracking-tight whitespace-nowrap uppercase">
+                Bird Spottings
+            </h1>
+        </div>
 
-                <div class="flex items-center space-x-2 whitespace-nowrap">
-                    <label for="species-select" class="font-medium text-sm">Active Species:</label>
-                    <select id="species-select" class="bg-white text-gray-800 px-3 py-1 rounded shadow focus:outline-none text-sm min-w-[180px]">
-                        <!-- Options populated dynamically -->
+        <div class="flex items-center gap-6">
+            <!-- Controls Wrapper -->
+            <div class="flex items-center gap-4 bg-blue-800/50 px-4 py-1.5 rounded-xl border border-blue-700/50">
+                <!-- Region Selector -->
+                <div class="flex items-center space-x-2">
+                    <label for="region-select" class="text-[10px] font-black text-blue-300 uppercase tracking-widest">Region</label>
+                    <select id="region-select" class="bg-transparent text-white text-xs font-bold focus:outline-none cursor-pointer">
+                        <option value="US" class="text-gray-900">All US</option>
+                        <option value="US-AL" class="text-gray-900">Alabama</option>
+                        <option value="US-AK" class="text-gray-900">Alaska</option>
+                        <option value="US-AZ" class="text-gray-900">Arizona</option>
+                        <option value="US-AR" class="text-gray-900">Arkansas</option>
+                        <option value="US-CA" class="text-gray-900">California</option>
+                        <option value="US-CO" class="text-gray-900">Colorado</option>
+                        <option value="US-CT" class="text-gray-900">Connecticut</option>
+                        <option value="US-DE" class="text-gray-900">Delaware</option>
+                        <option value="US-FL" class="text-gray-900">Florida</option>
+                        <option value="US-GA" class="text-gray-900">Georgia</option>
+                        <option value="US-HI" class="text-gray-900">Hawaii</option>
+                        <option value="US-ID" class="text-gray-900">Idaho</option>
+                        <option value="US-IL" class="text-gray-900">Illinois</option>
+                        <option value="US-IN" class="text-gray-900">Indiana</option>
+                        <option value="US-IA" class="text-gray-900">Iowa</option>
+                        <option value="US-KS" class="text-gray-900">Kansas</option>
+                        <option value="US-KY" class="text-gray-900">Kentucky</option>
+                        <option value="US-LA" class="text-gray-900">Louisiana</option>
+                        <option value="US-ME" class="text-gray-900">Maine</option>
+                        <option value="US-MD" class="text-gray-900">Maryland</option>
+                        <option value="US-MA" class="text-gray-900">Massachusetts</option>
+                        <option value="US-MI" class="text-gray-900">Michigan</option>
+                        <option value="US-MN" class="text-gray-900">Minnesota</option>
+                        <option value="US-MS" class="text-gray-900">Mississippi</option>
+                        <option value="US-MO" class="text-gray-900">Missouri</option>
+                        <option value="US-MT" class="text-gray-900">Montana</option>
+                        <option value="US-NE" class="text-gray-900">Nebraska</option>
+                        <option value="US-NV" class="text-gray-900">Nevada</option>
+                        <option value="US-NH" class="text-gray-900">New Hampshire</option>
+                        <option value="US-NJ" class="text-gray-900">New Jersey</option>
+                        <option value="US-NM" class="text-gray-900">New Mexico</option>
+                        <option value="US-NY" class="text-gray-900">New York</option>
+                        <option value="US-NC" class="text-gray-900">North Carolina</option>
+                        <option value="US-ND" class="text-gray-900">North Dakota</option>
+                        <option value="US-OH" class="text-gray-900">Ohio</option>
+                        <option value="US-OK" class="text-gray-900">Oklahoma</option>
+                        <option value="US-OR" class="text-gray-900">Oregon</option>
+                        <option value="US-PA" class="text-gray-900">Pennsylvania</option>
+                        <option value="US-RI" class="text-gray-900">Rhode Island</option>
+                        <option value="US-SC" class="text-gray-900">South Carolina</option>
+                        <option value="US-SD" class="text-gray-900">South Dakota</option>
+                        <option value="US-TN" class="text-gray-900">Tennessee</option>
+                        <option value="US-TX" class="text-gray-900">Texas</option>
+                        <option value="US-UT" class="text-gray-900">Utah</option>
+                        <option value="US-VT" class="text-gray-900">Vermont</option>
+                        <option value="US-VA" class="text-gray-900">Virginia</option>
+                        <option value="US-WA" class="text-gray-900">Washington</option>
+                        <option value="US-WV" class="text-gray-900">West Virginia</option>
+                        <option value="US-WI" class="text-gray-900">Wisconsin</option>
+                        <option value="US-WY" class="text-gray-900">Wyoming</option>
                     </select>
                 </div>
-            </div>
-        </div>
-    </nav>
+                
+                <div class="w-px h-4 bg-blue-700"></div>
 
-    <!-- Controls Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-[1000]">
-        <div class="container mx-auto px-4 py-3 flex flex-col md:flex-row items-center gap-6">
-            <!-- Region Select -->
-            <div class="flex items-center space-x-2">
-                <label for="region-select" class="text-sm font-semibold text-gray-700">Region:</label>
-                <select id="region-select" class="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    <option value="US">All US</option>
-                    <option value="US-AL">Alabama</option>
-                    <option value="US-AK">Alaska</option>
-                    <option value="US-AZ">Arizona</option>
-                    <option value="US-AR">Arkansas</option>
-                    <option value="US-CA">California</option>
-                    <option value="US-CO">Colorado</option>
-                    <option value="US-CT">Connecticut</option>
-                    <option value="US-DE">Delaware</option>
-                    <option value="US-FL">Florida</option>
-                    <option value="US-GA">Georgia</option>
-                    <option value="US-HI">Hawaii</option>
-                    <option value="US-ID">Idaho</option>
-                    <option value="US-IL">Illinois</option>
-                    <option value="US-IN">Indiana</option>
-                    <option value="US-IA">Iowa</option>
-                    <option value="US-KS">Kansas</option>
-                    <option value="US-KY">Kentucky</option>
-                    <option value="US-LA">Louisiana</option>
-                    <option value="US-ME">Maine</option>
-                    <option value="US-MD">Maryland</option>
-                    <option value="US-MA">Massachusetts</option>
-                    <option value="US-MI">Michigan</option>
-                    <option value="US-MN">Minnesota</option>
-                    <option value="US-MS">Mississippi</option>
-                    <option value="US-MO">Missouri</option>
-                    <option value="US-MT">Montana</option>
-                    <option value="US-NE">Nebraska</option>
-                    <option value="US-NV">Nevada</option>
-                    <option value="US-NH">New Hampshire</option>
-                    <option value="US-NJ">New Jersey</option>
-                    <option value="US-NM">New Mexico</option>
-                    <option value="US-NY">New York</option>
-                    <option value="US-NC">North Carolina</option>
-                    <option value="US-ND">North Dakota</option>
-                    <option value="US-OH">Ohio</option>
-                    <option value="US-OK">Oklahoma</option>
-                    <option value="US-OR">Oregon</option>
-                    <option value="US-PA">Pennsylvania</option>
-                    <option value="US-RI">Rhode Island</option>
-                    <option value="US-SC">South Carolina</option>
-                    <option value="US-SD">South Dakota</option>
-                    <option value="US-TN">Tennessee</option>
-                    <option value="US-TX">Texas</option>
-                    <option value="US-UT">Utah</option>
-                    <option value="US-VT">Vermont</option>
-                    <option value="US-VA">Virginia</option>
-                    <option value="US-WA">Washington</option>
-                    <option value="US-WV">West Virginia</option>
-                    <option value="US-WI">Wisconsin</option>
-                    <option value="US-WY">Wyoming</option>
+                <!-- Timeframe Slider -->
+                <div class="flex items-center space-x-3">
+                    <label for="days-slider" class="text-[10px] font-black text-blue-300 uppercase tracking-widest">Window</label>
+                    <input type="range" id="days-slider" min="1" max="30" value="14" class="w-24 h-1.5 bg-blue-700 rounded-lg appearance-none cursor-pointer accent-blue-400">
+                    <span id="days-label" class="text-[10px] font-bold text-blue-300 w-16">14 days</span>
+                </div>
+            </div>
+
+            <!-- Search Species -->
+            <div class="relative w-64 group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-4 w-4 text-blue-300 group-focus-within:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input type="text" id="bird-search" placeholder="Search species..." 
+                       class="w-full bg-blue-800 text-white placeholder-blue-400 pl-10 pr-4 py-2 rounded-lg border border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-blue-700 text-sm transition-all">
+                <div id="search-results" class="absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-2xl border border-gray-200 hidden z-[2001] max-h-80 overflow-y-auto text-gray-800"></div>
+            </div>
+
+            <!-- Active Species Dropdown -->
+            <div class="flex items-center space-x-3 border-l border-blue-800 pl-6 ml-2">
+                <label for="species-select" class="text-[10px] font-black text-blue-300 uppercase tracking-widest whitespace-nowrap">Active Species</label>
+                <select id="species-select" class="bg-blue-700 text-white px-3 py-1.5 rounded-lg shadow-inner focus:outline-none text-xs font-bold border border-blue-600 min-w-[200px]">
+                    <!-- Options populated dynamically -->
                 </select>
             </div>
-
-            <!-- Days Slider -->
-            <div class="flex items-center space-x-3 grow">
-                <label for="days-slider" class="text-sm font-semibold text-gray-700 whitespace-nowrap">Timeframe:</label>
-                <input type="range" id="days-slider" min="1" max="30" value="14" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-                <span id="days-label" class="text-sm font-medium text-blue-600 min-w-[100px]">Last 14 days</span>
-            </div>
         </div>
-    </div>
+    </header>
 
-    <main class="container mx-auto mt-8 p-4 bg-white rounded-lg shadow-xl">
-        <div class="flex flex-col lg:flex-row gap-6">
-            <!-- Left Column: Map -->
-            <div class="lg:w-2/3">
-                <div id="map" class="rounded-lg shadow-inner"></div>
-            </div>
+    <div class="flex-1 relative flex overflow-hidden">
+        <!-- Partition B: Full-Page Map -->
+        <main class="flex-1 h-full w-full bg-gray-200 relative">
+            <div id="map" class="h-full w-full"></div>
 
-            <!-- Right Column: Species Info Panel -->
-            <div id="species-panel" class="lg:w-1/3 p-4 bg-gray-50 rounded-lg border border-gray-200 min-h-[400px]">
-                <div id="species-info-content">
-                    <div id="species-placeholder" class="text-center py-20 text-gray-400 italic">
-                        Select a species to see info
+            <!-- Map Controls Overlay (Toggles & Legend) -->
+            <div id="map-controls-overlay" class="absolute bottom-6 left-6 z-[1000] space-y-3 w-64">
+                <!-- Flyway Toggles -->
+                <div class="bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-2xl border border-white/50">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Flyway Toggles</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="toggle-atlantic" class="px-2 py-1.5 rounded-lg text-white text-[9px] font-black uppercase transition-all shadow-sm active:scale-95" style="background-color: #ef4444;">Atlantic</button>
+                        <button id="toggle-mississippi" class="px-2 py-1.5 rounded-lg text-white text-[9px] font-black uppercase transition-all shadow-sm active:scale-95" style="background-color: #10b981;">Mississippi</button>
+                        <button id="toggle-central" class="px-2 py-1.5 rounded-lg text-white text-[9px] font-black uppercase transition-all shadow-sm active:scale-95" style="background-color: #f59e0b;">Central</button>
+                        <button id="toggle-pacific" class="px-2 py-1.5 rounded-lg text-white text-[9px] font-black uppercase transition-all shadow-sm active:scale-95" style="background-color: #8b5cf6;">Pacific</button>
                     </div>
-                    
-                    <div id="species-skeleton" class="hidden animate-pulse space-y-4">
-                        <div class="w-full h-48 bg-gray-200 rounded-lg"></div>
-                        <div class="h-6 bg-gray-200 rounded w-3/4"></div>
-                        <div class="space-y-2">
-                            <div class="h-4 bg-gray-200 rounded w-full"></div>
-                            <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                </div>
+
+                <!-- System Status / Legend -->
+                <div class="bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-2xl border border-white/50">
+                    <div class="flex justify-between items-start mb-3">
+                        <p class="text-[10px] font-black text-gray-800 uppercase tracking-widest">Status</p>
+                        <div id="fetch-status" class="text-[10px] font-bold text-blue-600"></div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full ring-2 ring-blue-100"></span>
+                            <span class="text-[9px] text-gray-500 font-black uppercase tracking-tight">Sightings</span>
                         </div>
-                    </div>
-
-                    <div id="species-data" class="hidden space-y-4">
-                        <img id="species-img" class="w-full h-auto rounded-lg shadow-md hidden" alt="Bird Image">
-                        <h2 id="species-name" class="text-2xl font-bold text-blue-600 leading-tight"></h2>
-                        <div id="species-desc" class="text-sm text-gray-600 leading-relaxed"></div>
-                        
-                        <!-- Species Stats Grid -->
-                        <div id="species-stats" class="hidden grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-200">
-                            <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
-                                <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Total Observed</p>
-                                <p id="stat-total-count" class="text-xl font-black text-blue-600">--</p>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
-                                <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Locations</p>
-                                <p id="stat-locations" class="text-xl font-black text-blue-600">--</p>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
-                                <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Max Flock</p>
-                                <p id="stat-max-flock" class="text-xl font-black text-blue-600">--</p>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
-                                <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Latest Sighting</p>
-                                <p id="stat-latest-time" class="text-xl font-bold text-blue-600 mt-1">--</p>
-                            </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-0.5 bg-red-500 rounded-full"></span>
+                            <span class="text-[9px] text-gray-500 font-black uppercase tracking-tight italic">Flyways</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Flyway Toggles -->
-        <div class="mt-4 flex flex-wrap gap-2">
-            <button id="toggle-atlantic" class="px-3 py-1 rounded text-white text-sm font-medium transition-all ring-2 ring-offset-2 ring-gray-400" style="background-color: #ef4444;">Atlantic</button>
-            <button id="toggle-mississippi" class="px-3 py-1 rounded text-white text-sm font-medium transition-all ring-2 ring-offset-2 ring-gray-400" style="background-color: #10b981;">Mississippi</button>
-            <button id="toggle-central" class="px-3 py-1 rounded text-white text-sm font-medium transition-all ring-2 ring-offset-2 ring-gray-400" style="background-color: #f59e0b;">Central</button>
-            <button id="toggle-pacific" class="px-3 py-1 rounded text-white text-sm font-medium transition-all ring-2 ring-offset-2 ring-gray-400" style="background-color: #8b5cf6;">Pacific</button>
-        </div>
+        </main>
 
-        <div class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700">
-            <div class="flex justify-between items-start">
-                <p class="font-bold">Legend</p>
-                <div id="fetch-status" class="text-sm font-medium"></div>
+        <!-- Partition C: Floating Right Sidebar Deck -->
+        <aside id="species-panel" class="absolute right-4 top-20 bottom-4 w-[380px] z-[1001] bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
+            <div id="species-info-content" class="h-full flex flex-col overflow-hidden">
+                <!-- Empty State -->
+                <div id="species-placeholder" class="h-full flex flex-col items-center justify-center p-10 text-center space-y-4">
+                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100">
+                        <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <p class="text-gray-400 italic text-sm">Select a bird to view data</p>
+                </div>
+                
+                <!-- Skeleton Loader -->
+                <div id="species-skeleton" class="hidden p-6 space-y-6 animate-pulse h-full">
+                    <div class="w-full flex-1 bg-gray-100 rounded-2xl"></div>
+                    <div class="h-8 bg-gray-100 rounded-lg w-3/4 flex-shrink-0"></div>
+                    <div class="space-y-3 flex-shrink-0">
+                        <div class="h-4 bg-gray-100 rounded w-full"></div>
+                        <div class="h-4 bg-gray-100 rounded w-full"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 flex-shrink-0">
+                        <div class="h-20 bg-gray-100 rounded-xl"></div>
+                        <div class="h-20 bg-gray-100 rounded-xl"></div>
+                    </div>
+                </div>
+
+                <!-- Active Data -->
+                <div id="species-data" class="hidden h-full flex flex-col overflow-hidden">
+                    <!-- Image Container: Grows to fill, but shrinks if pushed -->
+                    <div class="p-6 pb-0 flex-1 min-h-0 flex flex-col">
+                        <div class="relative rounded-xl overflow-hidden shadow-lg bg-gray-900/5 border border-gray-100 flex-1 flex items-center justify-center">
+                            <img id="species-img" class="max-w-full max-h-full object-contain hidden" alt="Bird Image">
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 pt-12">
+                                <h2 id="species-name" class="text-2xl font-black text-white leading-tight"></h2>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 flex flex-col flex-shrink-0">
+                        <!-- Description: Restricted height to ensure stats always show -->
+                        <div id="species-desc" class="text-xs text-gray-600 leading-relaxed font-medium overflow-hidden mb-6 line-clamp-[8]"></div>
+                        
+                        <!-- Species Stats Grid -->
+                        <div id="species-stats" class="hidden grid grid-cols-2 gap-3 mb-4 flex-shrink-0">
+                            <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 shadow-sm text-center">
+                                <p class="text-[8px] uppercase tracking-widest text-blue-400 font-black mb-1">OBSERVED</p>
+                                <p id="stat-total-count" class="text-xl font-black text-blue-700">--</p>
+                            </div>
+                            <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 shadow-sm text-center">
+                                <p class="text-[8px] uppercase tracking-widest text-blue-400 font-black mb-1">LOCATIONS</p>
+                                <p id="stat-locations" class="text-xl font-black text-blue-700">--</p>
+                            </div>
+                            <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 shadow-sm text-center">
+                                <p class="text-[8px] uppercase tracking-widest text-blue-400 font-black mb-1">MAX FLOCK</p>
+                                <p id="stat-max-flock" class="text-xl font-black text-blue-700">--</p>
+                            </div>
+                            <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 shadow-sm text-center">
+                                <p class="text-[8px] uppercase tracking-widest text-blue-400 font-black mb-1">LATEST DATE</p>
+                                <p id="stat-latest-time" class="text-[10px] font-black text-blue-700 mt-1">--</p>
+                            </div>
+                        </div>
+
+                        <p class="text-[9px] text-gray-300 text-center font-bold pb-2">Data powered by eBird & Wikipedia APIs</p>
+                    </div>
+                </div>
             </div>
-            <ul class="list-disc ml-5">
-                <li><span class="inline-block w-3 h-3 bg-blue-500 rounded-full"></span> Recent Sightings (US, Last 14 days)</li>
-                <li><span class="inline-block w-3 h-3 rounded-full" style="background-color: #ef4444;"></span> Active Flyway Paths (Dashed)</li>
-            </ul>
-        </div>
-    </main>
-
-    <footer class="container mx-auto mt-8 mb-8 text-center text-gray-500 text-sm">
-        Data provided by eBird API | Built with Leaflet.js & Flask
-    </footer>
+        </aside>
+    </div>
 
     <script src="/static/js/map.js"></script>
 </body>
