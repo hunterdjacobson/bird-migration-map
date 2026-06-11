@@ -106,19 +106,37 @@ Object.keys(FLYWAYS).forEach(key => {
     }
 });
 
-// Fetch species info (Wikipedia summary)
-async function updateSpeciesInfo(code) {
+// Manage infocard visibility states
+function setInfocardState(state) {
+    const loading = document.getElementById('species-loading');
     const placeholder = document.getElementById('species-placeholder');
     const skeleton = document.getElementById('species-skeleton');
-    const dataPanel = document.getElementById('species-data');
+    const data = document.getElementById('species-data');
+
+    if (loading) loading.classList.add('hidden');
+    if (placeholder) placeholder.classList.add('hidden');
+    if (skeleton) skeleton.classList.add('hidden');
+    if (data) data.classList.add('hidden');
+
+    if (state === 'loading' && loading) {
+        loading.classList.remove('hidden');
+    } else if (state === 'placeholder' && placeholder) {
+        placeholder.classList.remove('hidden');
+    } else if (state === 'skeleton' && skeleton) {
+        skeleton.classList.remove('hidden');
+    } else if (state === 'data' && data) {
+        data.classList.remove('hidden');
+    }
+}
+
+// Fetch species info (Wikipedia summary)
+async function updateSpeciesInfo(code) {
     const nameEl = document.getElementById('species-name');
     const descEl = document.getElementById('species-desc');
     const imgEl = document.getElementById('species-img');
 
     // Show skeleton state
-    placeholder.classList.add('hidden');
-    dataPanel.classList.add('hidden');
-    skeleton.classList.remove('hidden');
+    setInfocardState('skeleton');
 
     try {
         const response = await fetch(`/api/species/${code}/info`);
@@ -147,15 +165,13 @@ async function updateSpeciesInfo(code) {
             imgEl.classList.add('hidden');
         }
 
-        skeleton.classList.add('hidden');
-        dataPanel.classList.remove('hidden');
+        setInfocardState('data');
     } catch (error) {
         console.error('Error fetching species info:', error);
         nameEl.textContent = "Error";
         descEl.textContent = "Failed to load species information.";
         imgEl.classList.add('hidden');
-        skeleton.classList.add('hidden');
-        dataPanel.classList.remove('hidden');
+        setInfocardState('data');
     }
 }
 
@@ -167,6 +183,7 @@ async function populateSpecies(regionCode = 'US') {
     
     const back = daysSlider.value;
     status.innerText = "Loading regional species...";
+    setInfocardState('loading');
     
     try {
         const response = await fetch(`/api/species?region=${regionCode}&back=${back}`);
@@ -198,12 +215,14 @@ async function populateSpecies(regionCode = 'US') {
             } else {
                 status.innerText = "No species data for this region in the selected timeframe.";
                 markersLayer.clearLayers();
+                setInfocardState('placeholder');
             }
         }
 
     } catch (error) {
         console.error('Error loading species list:', error);
         status.innerText = "Failed to load species list.";
+        setInfocardState('placeholder');
     }
 }
 
